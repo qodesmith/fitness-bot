@@ -17,6 +17,42 @@ const {
 } = process.env
 const wait = num => new Promise(resolve => setTimeout(resolve, num))
 
+//////////////////////////
+// REP Fitness Products //
+//////////////////////////
+await Promise.all(products.map(getRepFitnessProductInfo))
+  .then(messages => {
+    const longestMessage = messages.reduce((length, msg) => msg.length > length ? msg.length : length ,0)
+    console.log(chalk.bold('REP FITNESS:'))
+
+    messages.forEach(message => {
+      console.log(`  ${message}`)
+      console.log(`  ${'-'.repeat(longestMessage)}`)
+    })
+    console.log('\n')
+  })
+
+
+///////////////////////////
+// Dick's Sporting Goods //
+///////////////////////////
+const { page, browser } = await getDicksWebpage()
+const dicksStatenIsland = await getDicksProductInfo({ page, zipCode: '10310' })
+const dicks2 = await getDicksProductInfo({ page, locationItem: 2 })
+const dicks3 = await getDicksProductInfo({ page, locationItem: 3 })
+const dicks4 = await getDicksProductInfo({ page, locationItem: 4 })
+const dicks5 = await getDicksProductInfo({ page, locationItem: 5 })
+const dicks6 = await getDicksProductInfo({ page, locationItem: 6 })
+const dicks7 = await getDicksProductInfo({ page, locationItem: 7 })
+const dicks8 = await getDicksProductInfo({ page, locationItem: 8 })
+const dicks9 = await getDicksProductInfo({ page, locationItem: 9 })
+const dicks10 = await getDicksProductInfo({ page, locationItem: 10 })
+const dicks11 = await getDicksProductInfo({ page, locationItem: 11 })
+const dicks12 = await getDicksProductInfo({ page, locationItem: 12 })
+const dicksUpstateByNanas = await getDicksProductInfo({ page, zipCode: '13413' })
+
+
+await browser.close()
 
 async function getRepFitnessProductInfo({ url, originalPrice, selectors, titleAddon }) {
   const { data } = await axios.get(url)
@@ -64,7 +100,7 @@ async function getDicksWebpage() {
 }
 
 async function getDicksProductInfo({ page, locationItem, zipCode }) {
-  // Click the "select store" button - this is just to satisfy the browser.
+  // Click the "select store" button.
   ;(await page.$('#store-layer-wrapper > button')).click()
 
   let storeName = '???'
@@ -93,7 +129,7 @@ async function getDicksProductInfo({ page, locationItem, zipCode }) {
 
       storeLocation = await page.waitForSelector(storeLocationSelector)
     } else if (zipCode) {
-      storeName = 'New Hartford'
+      // storeName = zipCode === '10314' ? 'Staten Island' : 'New Hartford'
 
       await page.waitForSelector('#zip-code')
       await wait(1000)
@@ -108,14 +144,12 @@ async function getDicksProductInfo({ page, locationItem, zipCode }) {
       await page.keyboard.press('Delete')
       await page.keyboard.press('Delete')
       await page.keyboard.press('Delete')
-      // await page.keyboard.press('Delete')
-      // await page.evaluate((el, zipCode) => el.value = zipCode, zipCodeInput, zipCode)
       await wait(1000)
       await page.keyboard.type(zipCode)
 
       const searchSelector = '.pdp-sidenav-content .store-search-input-container button'
       const searchButton = await page.waitForSelector(searchSelector)
-      searchButton.click()
+      await searchButton.click()
 
       // Because sometimes it's still checked -_-
       const checkboxInput = await page.waitForSelector('#showStoresCheckbox')
@@ -126,82 +160,79 @@ async function getDicksProductInfo({ page, locationItem, zipCode }) {
       }
 
       await wait(1000)
-      storeLocation = await page.$('#stores:nth-child(1)')
+      const storeLocationSelector = '#stores:nth-child(1)'
+      const storeNameSelector = `${storeLocationSelector} > label .store-name`
+      const storeNameEl = await page.$(storeNameSelector)
+      storeLocation = await page.$(storeLocationSelector)
+      storeName = await page.evaluate(el => el.textContent, storeNameEl)
     }
 
     await storeLocation.click()
 
-    const setStoreSelector = 'button.store-pickup-controls-set-store-btn'
+    const setStoreSelector = '.store-pickup-controls button.store-pickup-controls-set-store-btn'
     const setStoreButton = await page.waitForSelector(setStoreSelector)
-    await setStoreButton.click()
+    const setStoreButtonIsDisabled = await page.evaluate(button => button.disabled, setStoreButton)
+    if (setStoreButtonIsDisabled) {
+      const closeButton = await page.waitForSelector('.panel-description-content .back-button button.btn.btn-close')
+      console.log('CLICKING CLOSE BUTTON')
+      await closeButton.click()
+    } else {
+      console.log('CLICKING SET STORE BUTTON')
+      await setStoreButton.click()
+    }
   }
 
-  // Close the slide-in modal thing - we only open & close it without selecting anything for Staten Island.
-  if (!locationItem && !zipCode) {
-    const closeButtonSelector = '.pdp-sidenav-content.pdp-sidenav-show.pdp-sidenav-content-right .fixed-header .back-button'
-    const closeButton = await page.waitForSelector(closeButtonSelector)
-    await closeButton.click()
-  }
-
-  console.log(chalk.bold(`DICKS (${locationItem || zipCode ? `${storeName} - ${storeMiles}` : 'Staten Island'})`))
+  console.log(chalk.bold(`DICKS (${storeName} - ${storeMiles})`))
+  const lbsSelectorMaker = lbs => `[aria-label="${lbs} lbs."]`
 
   // 15 lbs.
-  const selector15 = '#attr_Weight > div.col-12.ng-star-inserted > pdp-block-attribute > div > div > button:nth-child(3)'
-  const notInStock15 = await lbsChecker(selector15, 15)
+  const notInStock15 = await lbsChecker(lbsSelectorMaker(15), 15)
 
   // 25 lbs.
-  const selector25 = '#attr_Weight > div.col-12.ng-star-inserted > pdp-block-attribute > div > div > button:nth-child(5)'
-  const notInStock25 = await lbsChecker(selector25, 25)
+  const notInStock25 = await lbsChecker(lbsSelectorMaker(25), 25)
 
   // 30 lbs.
-  const selector30 = '#attr_Weight > div.col-12.ng-star-inserted > pdp-block-attribute > div > div > button:nth-child(6)'
-  const notInStock30 = await lbsChecker(selector30, 30)
+  const notInStock30 = await lbsChecker(lbsSelectorMaker(30), 30)
 
   // 35 lbs.
-  const selector35 = '#attr_Weight > div.col-12.ng-star-inserted > pdp-block-attribute > div > div > button:nth-child(7)'
-  const notInStock35 = await lbsChecker(selector35, 35)
+  const notInStock35 = await lbsChecker(lbsSelectorMaker(35), 35)
 
   // 40 lbs.
-  const selector40 = '#attr_Weight > div.col-12.ng-star-inserted > pdp-block-attribute > div > div > button:nth-child(8)'
-  const notInStock40 = await lbsChecker(selector40, 40)
+  const notInStock40 = await lbsChecker(lbsSelectorMaker(40), 40)
 
   // 45 lbs.
-  const selector45 = '#attr_Weight > div.col-12.ng-star-inserted > pdp-block-attribute > div > div > button:nth-child(9)'
-  const notInStock45 = await lbsChecker(selector45, 45)
+  const notInStock45 = await lbsChecker(lbsSelectorMaker(45), 45)
 
   // 50 lbs.
-  const selector50 = '#attr_Weight > div.col-12.ng-star-inserted > pdp-block-attribute > div > div > button:nth-child(10)'
-  const notInStock50 = await lbsChecker(selector50, 50)
-
+  const notInStock50 = await lbsChecker(lbsSelectorMaker(50), 50)
 
   console.log('\n')
 
-
-  async function lbsChecker(selector, num) {
+  async function lbsChecker(selector, lbs) {
     const lbsButton = await page.waitForSelector(selector)
     await lbsButton.click()
 
-    const messageSelector = '#shippingOptions'
-    const notAvailableText = `Not Available at  ${(locationItem || zipCode) ? storeName.toUpperCase() : 'STATEN ISLAND'}`
-    const availableText = `In Stock at  ${(locationItem || zipCode) ? storeName.toUpperCase() : 'STATEN ISLAND'}`
-    const el = await page.$(messageSelector)
-    const text = await page.evaluate(el => el.textContent, el)
+    const messageSelector = '#shippingOptions > div:nth-child(3) > label > .radio-label > div > span'
+    const notAvailableText = `Not Available at  ${storeName.toUpperCase()}`
+    const availableText = `In Stock at  ${storeName.toUpperCase()}`
+
+    const messegeEl = await page.waitForSelector(messageSelector)
+    const text = await page.evaluate(el => el.textContent, messegeEl)
     const notInStock = text.includes(notAvailableText)
     const inStock = text.includes(availableText)
 
     if (notInStock) {
-      console.log(`  ${num}lbs - not in stock.`)
+      console.log(`  ${lbs}lbs - not in stock.`)
     } else if (inStock) {
-      console.log(chalk.keyword('lime').bold(`  ${num}lbs - IN STOCK!`))
+      console.log(chalk.keyword('lime').bold(`  ${lbs}lbs - IN STOCK!`))
     } else {
-      console.log(`  ${num}lbs - couldn't determine stock :/`)
+      console.log(`  ${lbs}lbs - couldn't determine stock :/`)
       console.log(chalk.red(text))
     }
 
     return notInStock
   }
 }
-
 
 async function sendEmail() {
   const transporter = nodemailer.createTransport({
@@ -228,34 +259,3 @@ async function sendEmail() {
   })
 
 }
-
-// Ensure the products are processed in order.
-await Promise.all(products.map(getRepFitnessProductInfo))
-  .then(messages => {
-    const longestMessage = messages.reduce((length, msg) => msg.length > length ? msg.length : length ,0)
-    console.log(chalk.bold('REP FITNESS:'))
-
-    messages.forEach(message => {
-      console.log(`  ${message}`)
-      console.log(`  ${'-'.repeat(longestMessage)}`)
-    })
-    console.log('\n')
-  })
-
-const { page, browser } = await getDicksWebpage()
-const dicksStatenIsland = await getDicksProductInfo({ page })
-const dicks2 = await getDicksProductInfo({ page, locationItem: 2 })
-const dicks3 = await getDicksProductInfo({ page, locationItem: 3 })
-const dicks4 = await getDicksProductInfo({ page, locationItem: 4 })
-const dicks5 = await getDicksProductInfo({ page, locationItem: 5 })
-const dicks6 = await getDicksProductInfo({ page, locationItem: 6 })
-const dicks7 = await getDicksProductInfo({ page, locationItem: 7 })
-const dicks8 = await getDicksProductInfo({ page, locationItem: 8 })
-const dicks9 = await getDicksProductInfo({ page, locationItem: 9 })
-const dicks10 = await getDicksProductInfo({ page, locationItem: 10 })
-const dicks11 = await getDicksProductInfo({ page, locationItem: 11 })
-const dicks12 = await getDicksProductInfo({ page, locationItem: 12 })
-const dicksUpstateByNanas = await getDicksProductInfo({ page, zipCode: '13413' })
-
-
-await browser.close()

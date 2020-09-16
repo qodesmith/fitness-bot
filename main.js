@@ -174,10 +174,8 @@ async function getDicksProductInfo({ page, locationItem, zipCode }) {
     const setStoreButtonIsDisabled = await page.evaluate(button => button.disabled, setStoreButton)
     if (setStoreButtonIsDisabled) {
       const closeButton = await page.waitForSelector('.panel-description-content .back-button button.btn.btn-close')
-      console.log('CLICKING CLOSE BUTTON')
       await closeButton.click()
     } else {
-      console.log('CLICKING SET STORE BUTTON')
       await setStoreButton.click()
     }
   }

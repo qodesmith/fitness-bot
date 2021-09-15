@@ -36,23 +36,56 @@ await Promise.all(products.map(getRepFitnessProductInfo))
 ///////////////////////////
 // Dick's Sporting Goods //
 ///////////////////////////
-const { page, browser } = await getDicksWebpage()
-const dicksStatenIsland = await getDicksProductInfo({ page, zipCode: '10310' })
-const dicks2 = await getDicksProductInfo({ page, locationItem: 2 })
-const dicks3 = await getDicksProductInfo({ page, locationItem: 3 })
-const dicks4 = await getDicksProductInfo({ page, locationItem: 4 })
-const dicks5 = await getDicksProductInfo({ page, locationItem: 5 })
-const dicks6 = await getDicksProductInfo({ page, locationItem: 6 })
-const dicks7 = await getDicksProductInfo({ page, locationItem: 7 })
-const dicks8 = await getDicksProductInfo({ page, locationItem: 8 })
-const dicks9 = await getDicksProductInfo({ page, locationItem: 9 })
-const dicks10 = await getDicksProductInfo({ page, locationItem: 10 })
-const dicks11 = await getDicksProductInfo({ page, locationItem: 11 })
-const dicks12 = await getDicksProductInfo({ page, locationItem: 12 })
-const dicksUpstateByNanas = await getDicksProductInfo({ page, zipCode: '13413' })
+const dicksDumbbellsUrl = 'https://www.dickssportinggoods.com/p/fitness-gear-cast-hex-dumbbell-various-weights-16fgeu10lbcsthxdmdmb/16fgeu10lbcsthxdmdmb'
+const dicksPlatesUrl = 'https://www.dickssportinggoods.com/p/fitness-gear-olympic-cast-plate-16fgeufg25lblycstwpl/16fgeufg25lblycstwpl'
 
+
+let { page, browser } = await getDicksWebpage(dicksDumbbellsUrl)
+const dicksStatenIsland = await getDicksProductInfo({ page, type: 'dumbbell', zipCode: '10310' })
+const dicks2 = await getDicksProductInfo({ page, type: 'dumbbell', locationItem: 2 })
+const dicks3 = await getDicksProductInfo({ page, type: 'dumbbell', locationItem: 3 })
+const dicks4 = await getDicksProductInfo({ page, type: 'dumbbell', locationItem: 4 })
+const dicks5 = await getDicksProductInfo({ page, type: 'dumbbell', locationItem: 5 })
+const dicks6 = await getDicksProductInfo({ page, type: 'dumbbell', locationItem: 6 })
+const dicks7 = await getDicksProductInfo({ page, type: 'dumbbell', locationItem: 7 })
+const dicks8 = await getDicksProductInfo({ page, type: 'dumbbell', locationItem: 8 })
+const dicks9 = await getDicksProductInfo({ page, type: 'dumbbell', locationItem: 9 })
+const dicks10 = await getDicksProductInfo({ page, type: 'dumbbell', locationItem: 10 })
+const dicks11 = await getDicksProductInfo({ page, type: 'dumbbell', locationItem: 11 })
+const dicks12 = await getDicksProductInfo({ page, type: 'dumbbell', locationItem: 12 })
+// const dicksUpstateByNanas = await getDicksProductInfo({ page, type: 'dumbbell', zipCode: '13413' })
+
+// // On the way to Nana's.
+// const dicksKingston = await getDicksProductInfo({ page, type: 'dumbbell', zipCode: '12401' })
+// const dicksAlbany = await getDicksProductInfo({ page, type: 'dumbbell', zipCode: '12203' })
+// const dicksLatham = await getDicksProductInfo({ page, type: 'dumbbell', zipCode: '12110' })
+
+// // 1 hr from Nana's.
+// const dicksSyracuse = await getDicksProductInfo({ page, type: 'dumbbell', zipCode: '13214' })
 
 await browser.close()
+
+
+// const platesData = await getDicksWebpage(dicksPlatesUrl)
+// const page = platesData.page
+// const browser = platesData.browser
+// const dicksStatenIsland = await getDicksProductInfo({ page, type: 'plate', zipCode: '10310' })
+// const dicks2 = await getDicksProductInfo({ page, type: 'plate', locationItem: 2 })
+// const dicks3 = await getDicksProductInfo({ page, type: 'plate', locationItem: 3 })
+// const dicks4 = await getDicksProductInfo({ page, type: 'plate', locationItem: 4 })
+// const dicks5 = await getDicksProductInfo({ page, type: 'plate', locationItem: 5 })
+// const dicks6 = await getDicksProductInfo({ page, type: 'plate', locationItem: 6 })
+// const dicks7 = await getDicksProductInfo({ page, type: 'plate', locationItem: 7 })
+// const dicks8 = await getDicksProductInfo({ page, type: 'plate', locationItem: 8 })
+// const dicks9 = await getDicksProductInfo({ page, type: 'plate', locationItem: 9 })
+// const dicks10 = await getDicksProductInfo({ page, type: 'plate', locationItem: 10 })
+// const dicks11 = await getDicksProductInfo({ page, type: 'plate', locationItem: 11 })
+// const dicks12 = await getDicksProductInfo({ page, type: 'plate', locationItem: 12 })
+
+// await browser.close()
+
+
+
 
 async function getRepFitnessProductInfo({ url, originalPrice, selectors, titleAddon }) {
   const { data } = await axios.get(url)
@@ -72,8 +105,7 @@ async function getRepFitnessProductInfo({ url, originalPrice, selectors, titleAd
   }
 }
 
-async function getDicksWebpage() {
-  const url = 'https://www.dickssportinggoods.com/p/fitness-gear-cast-hex-dumbbell-various-weights-16fgeu10lbcsthxdmdmb/16fgeu10lbcsthxdmdmb'
+async function getDicksWebpage(url) {
   const browser = await puppeteer.launch({
     headless: false,
     args: [
@@ -99,7 +131,7 @@ async function getDicksWebpage() {
   return { page, browser }
 }
 
-async function getDicksProductInfo({ page, locationItem, zipCode }) {
+async function getDicksProductInfo({ page, locationItem, zipCode, type }) {
   // Click the "select store" button.
   ;(await page.$('#store-layer-wrapper > button')).click()
 
@@ -181,55 +213,161 @@ async function getDicksProductInfo({ page, locationItem, zipCode }) {
   }
 
   console.log(chalk.bold(`DICKS (${storeName} - ${storeMiles})`))
-  const lbsSelectorMaker = lbs => `[aria-label="${lbs} lbs."]`
+  const itemSelector = lbs => `[aria-label="${lbs} lbs."]`
 
-  // 15 lbs.
-  const notInStock15 = await lbsChecker(lbsSelectorMaker(15), 15)
+  if (type === 'dumbbell') {
 
-  // 25 lbs.
-  const notInStock25 = await lbsChecker(lbsSelectorMaker(25), 25)
+    // 15 lbs.
+    // const notInStock15 = await itemChecker(itemSelector(15), 15)
 
-  // 30 lbs.
-  const notInStock30 = await lbsChecker(lbsSelectorMaker(30), 30)
+    // 25 lbs.
+    // const notInStock25 = await itemChecker(itemSelector(25), 25) // Latham - 12110
 
-  // 35 lbs.
-  const notInStock35 = await lbsChecker(lbsSelectorMaker(35), 35)
+    // 30 lbs.
+    // const notInStock30 = await itemChecker(itemSelector(30), 30) // Latham - 12110
 
-  // 40 lbs.
-  const notInStock40 = await lbsChecker(lbsSelectorMaker(40), 40)
+    // 35 lbs.
+    // const notInStock35 = await itemChecker(itemSelector(35), 35) // Princeton
 
-  // 45 lbs.
-  const notInStock45 = await lbsChecker(lbsSelectorMaker(45), 45)
+    // 40 lbs.
+    // const notInStock40 = await itemChecker(itemSelector(40), 40) // Princeton
 
-  // 50 lbs.
-  const notInStock50 = await lbsChecker(lbsSelectorMaker(50), 50)
+    // 45 lbs.
+    const notInStock45 = await itemChecker(itemSelector(45), 45)
+
+    // 50 lbs.
+    const notInStock50 = await itemChecker(itemSelector(50), 50)
+  } else if (type === 'plate') {
+    // 5 lbs.
+    const notInStock5 = await itemChecker(itemSelector(5), 5)
+
+    // 10 lbs.
+    const notInStock10 = await itemChecker(itemSelector(10), 10)
+
+    // 25 lbs.
+    const notInStock25 = await itemChecker(itemSelector(25), 25)
+
+    // 35 lbs.
+    const notInStock35 = await itemChecker(itemSelector(35), 35)
+
+    // 45 lbs.
+    const notInStock45 = await itemChecker(itemSelector(45), 45)
+  }
 
   console.log('\n')
 
-  async function lbsChecker(selector, lbs) {
+  async function itemChecker(selector, lbs) {
     const lbsButton = await page.waitForSelector(selector)
-    await lbsButton.click()
+
+    /*
+      We need a way to ensure that all fetch requests are completed
+      as a result of clicking this button. It doesn't seem that Puppeteer
+      supports this at the moment -
+    */
+   await Promise.all([
+     waitForNetworkIdle(page, 250),
+     lbsButton.click(),
+   ])
 
     const messageSelector = '#shippingOptions > div:nth-child(3) > label > .radio-label > div > span'
+    const howManyLeftSelector = '#shippingOptions > div:nth-child(3) > label > .radio-label > div:nth-child(2)'
     const notAvailableText = `Not Available at  ${storeName.toUpperCase()}`
     const availableText = `In Stock at  ${storeName.toUpperCase()}`
 
     const messegeEl = await page.waitForSelector(messageSelector)
-    const text = await page.evaluate(el => el.textContent, messegeEl)
-    const notInStock = text.includes(notAvailableText)
-    const inStock = text.includes(availableText)
+    const howManyLeftEl = await page.waitForSelector(howManyLeftSelector)
+    const messageText = await page.evaluate(el => el.textContent, messegeEl)
+    const notInStock = messageText.includes(notAvailableText)
+    const inStock = messageText.includes(availableText)
+    const howManyText = await page.evaluate(el => el.textContent, howManyLeftEl)
 
     if (notInStock) {
-      console.log(`  ${lbs}lbs - not in stock.`)
+      console.log(`  (${type}) ${lbs}lbs - not in stock.`)
     } else if (inStock) {
-      console.log(chalk.keyword('lime').bold(`  ${lbs}lbs - IN STOCK!`))
+      console.log(chalk.keyword('lime').bold(`  ${lbs}lbs - IN STOCK! `), chalk.red(howManyText))
     } else {
       console.log(`  ${lbs}lbs - couldn't determine stock :/`)
-      console.log(chalk.red(text))
+      console.log(chalk.red(messageText))
     }
 
     return notInStock
   }
+}
+
+// https://stackoverflow.com/a/56011152/2525633
+function waitForNetworkIdle2(page, timeout, maxInflightRequests = 0) {
+  page.on('request', onRequestStarted);
+  page.on('requestfinished', onRequestFinished);
+  page.on('requestfailed', onRequestFinished);
+
+  let inflight = 0;
+  let fulfill;
+  let promise = new Promise(x => fulfill = x);
+  let timeoutId = setTimeout(onTimeoutDone, timeout);
+  return promise;
+
+  function onTimeoutDone() {
+    page.removeListener('request', onRequestStarted);
+    page.removeListener('requestfinished', onRequestFinished);
+    page.removeListener('requestfailed', onRequestFinished);
+    fulfill();
+  }
+
+  function onRequestStarted() {
+    ++inflight;
+    if (inflight > maxInflightRequests)
+      clearTimeout(timeoutId);
+  }
+
+  function onRequestFinished() {
+    if (inflight === 0)
+      return;
+    --inflight;
+    if (inflight === maxInflightRequests)
+      timeoutId = setTimeout(onTimeoutDone, timeout);
+  }
+}
+
+function waitForNetworkIdle(page, time = 250, maxTimeout = 5000) {
+  let requests = []
+  let interval
+
+  page.on('requestfinished', removeRequest)
+  page.on('requestfailed', removeRequest)
+  page.on('request', addRequest)
+
+  function removeRequest(request) {
+    requests--
+  }
+
+  function addRequest(request) {
+    console.log('\n----------REQUEST----------')
+    console.log(request.headers())
+    console.log(request.method())
+    console.log(request.postData())
+    console.log('----------REQUEST----------\n')
+    requests++
+  }
+
+  return new Promise(resolve => {
+    // Resolve the promise after the max time no matter what.
+    const timeout = setTimeout(() => {
+      clearInterval(interval)
+      resolve()
+    }, maxTimeout)
+
+    // Poll for the number of requests and resolve conditionally.
+    interval = setInterval(() => {
+      if (requests < 1) {
+        page.removeListener('requestfinished', removeRequest)
+        page.removeListener('requestfailed', removeRequest)
+        page.removeListener('request', addRequest)
+        clearTimeout(timeout)
+        clearInterval(interval)
+        resolve()
+      }
+    }, time)
+  })
 }
 
 async function sendEmail() {

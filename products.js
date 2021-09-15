@@ -42,15 +42,15 @@ export default [
     },
     titleAddon: '(355 lb set)',
   },
-  {
-    url: 'https://www.repfitness.com/rep-dumbbell-rack',
-    originalPrice: 139,
-    selectors: {
-      price,
-      availability,
-      title,
-    },
-  },
+  // { // Found on amazon waaaay cheaper.
+  //   url: 'https://www.repfitness.com/rep-dumbbell-rack',
+  //   originalPrice: 139,
+  //   selectors: {
+  //     price,
+  //     availability,
+  //     title,
+  //   },
+  // },
   {
     url: 'https://www.repfitness.com/rep-ab3000-fid-adj-bench',
     originalPrice: 249,
